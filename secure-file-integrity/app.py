@@ -19,7 +19,11 @@ from utils.verifier import compare_hashes
 
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_DIR = BASE_DIR / "uploads"
+UPLOAD_DIR = (
+    Path("/tmp/trueform_uploads")
+    if os.getenv("VERCEL")
+    else BASE_DIR / "uploads"
+)
 MAX_FILE_SIZE = 16 * 1024 * 1024
 
 app = Flask(__name__)
