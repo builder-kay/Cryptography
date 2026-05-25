@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueForm</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('home') }}" aria-label="TrueForm home">
+            <span class="logo-mark" aria-hidden="true">T</span>
+            <span>TrueForm</span>
+        </a>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero__content">
+                <p class="eyebrow">Cryptography Project</p>
+                <h1>TrueForm</h1>
+                <p>
+                    Secure File Integrity Verification System using SHA-256. Register trusted files,
+                    then verify later whether they are authentic, unmodified, and uncorrupted.
+                </p>
+            </div>
+            <div class="signal-panel" aria-label="System status">
+                <div class="scanner-stage" aria-hidden="true">
+                    <div class="file-outline">
+                        <div class="file-corner"></div>
+                        <div class="file-row file-row--wide"></div>
+                        <div class="file-row"></div>
+                        <div class="file-row file-row--short"></div>
+                        <div class="file-fingerprint">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    <div class="scanline"></div>
+                    <div class="scan-glow"></div>
+                </div>
+                <div class="monitor-copy">
+                    <p>Integrity Monitor</p>
+                    <strong>ACTIVE</strong>
+                    <span>Hash comparison engine online</span>
+                </div>
+            </div>
+        </section>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <section class="alerts">
+                    {% for category, message in messages %}
+                        <div class="alert alert--{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+
+        <section class="operations-layout">
+            <div class="workflow-column">
+                <section class="workflow-picker" aria-label="Choose file operation">
+                    <button type="button" class="mode-button {% if upload_mode %}is-active{% endif %}" data-workflow-target="upload-panel">
+                        Register Original File
+                    </button>
+                    <button type="button" class="mode-button {% if verification_result %}is-active{% endif %}" data-workflow-target="verify-panel">
+                        Check File Authenticity
+                    </button>
+                </section>
+
+                <section class="workspace-grid workspace-grid--single">
+                    <article id="upload-panel" class="tool-card workflow-panel {% if upload_mode %}is-active{% endif %}">
+                        <div class="section-heading">
+                            <p class="eyebrow">Baseline</p>
+                            <h2>Upload Original File</h2>
+                        </div>
+                        <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                            <label for="upload-file">Choose a file to hash and store</label>
+                            <input id="upload-file" type="file" name="file" required>
+                            <button type="submit">Generate SHA-256 Hash</button>
+                        </form>
+                    </article>
+
+                    <article id="verify-panel" class="tool-card workflow-panel {% if verification_result %}is-active{% endif %}">
+                        <div class="section-heading">
+                            <p class="eyebrow">Verification</p>
+                            <h2>Check File Integrity</h2>
+                        </div>
+                        <form action="{{ url_for('verify_file') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                            <label for="verify-file">Upload the file again for comparison</label>
+                            <input id="verify-file" type="file" name="file" required>
+                            <button type="submit">Verify Authenticity</button>
+                        </form>
+                    </article>
+                </section>
+            </div>
+
+            <aside class="result-panel">
+                <div class="section-heading">
+                    <p class="eyebrow">Result Center</p>
+                    <h2>{% if uploaded_filename %}{{ uploaded_filename }}{% else %}Awaiting File{% endif %}</h2>
+                </div>
+
+                {% if generated_hash %}
+                    <div class="status-banner status-banner--ok">
+                        Baseline Stored
+                    </div>
+                    <div class="secure-note secure-note--ok">
+                        Your original file has been registered successfully. You can now use it as the trusted version.
+                    </div>
+                {% elif verification_result %}
+                    <div class="status-banner {% if is_authentic %}status-banner--ok{% else %}status-banner--danger{% endif %}">
+                        {{ verification_result }}
+                    </div>
+                    <div class="secure-note {% if is_authentic %}secure-note--ok{% else %}secure-note--danger{% endif %}">
+                        {% if is_authentic %}
+                            Your file is authentic and uncorrupted. Enjoy.
+                        {% else %}
+                            This file is not authentic. It may have been modified, corrupted, or replaced.
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="result-placeholder">
+                        <span class="result-icon"></span>
+                        <strong>No result yet</strong>
+                        <p>Select an action on the left, upload a file, and the integrity result will appear here.</p>
+                    </div>
+                {% endif %}
+            </aside>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

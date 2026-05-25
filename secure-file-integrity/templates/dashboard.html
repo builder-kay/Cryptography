@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueForm Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('home') }}" aria-label="TrueForm home">
+            <span class="logo-mark" aria-hidden="true">T</span>
+            <span>TrueForm</span>
+        </a>
+        <nav>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-header">
+            <p class="eyebrow">Operations View</p>
+            <h1>TrueForm Dashboard</h1>
+            <p>Review stored hashes, verification states, and upload timestamps from Supabase.</p>
+        </section>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <section class="alerts">
+                    {% for category, message in messages %}
+                        <div class="alert alert--{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+
+        <section class="table-shell">
+            <div class="table-toolbar">
+                <h2>Stored File Records</h2>
+                <span>{{ files|length }} records</span>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Status</th>
+                            <th>Upload Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                            <tr>
+                                <td>{{ file.filename }}</td>
+                                <td>
+                                    <span class="status-pill {% if file.verification_status == 'File is Authentic' or file.verification_status == 'Original Uploaded' %}status-pill--ok{% else %}status-pill--danger{% endif %}">
+                                        {{ file.verification_status }}
+                                    </span>
+                                </td>
+                                <td>{{ file.upload_timestamp }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="empty-state">No records found. Upload a file to create the first baseline hash.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
