@@ -83,6 +83,10 @@ FLASK_SECRET_KEY=your-random-secret
 
 Use the same values from local `.env`, but never commit `.env`.
 
+For a public demo, prefer the Supabase anon key with the demo Row Level Security
+policies from `database/schema.sql`. If you use the service role key, keep it only
+inside Vercel environment variables because it bypasses Row Level Security.
+
 ## 5. Redeploy
 
 After adding environment variables:
@@ -106,3 +110,5 @@ Open the Vercel URL and test:
 - Uploaded files are saved only temporarily while hashing.
 - Supabase stores the important data: filename, hash, status, and timestamp.
 - Do not rely on Vercel local storage for permanent file storage.
+- If Vercel reports that `functions` patterns do not match `api/`, keep `vercel.json`
+  as the simple rewrite-only file included in this project.
