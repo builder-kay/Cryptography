@@ -1,6 +1,7 @@
 """Flask application for SHA-256 based file integrity verification."""
 
 import os
+import tempfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -19,10 +20,11 @@ from utils.verifier import compare_hashes
 
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_DIR = (
-    Path("/tmp/trueform_uploads")
-    if os.getenv("VERCEL")
-    else BASE_DIR / "uploads"
+UPLOAD_DIR = Path(
+    os.getenv(
+        "UPLOAD_DIR",
+        Path(tempfile.gettempdir()) / "secure_file_integrity_uploads",
+    )
 )
 MAX_FILE_SIZE = 16 * 1024 * 1024
 
@@ -49,10 +51,18 @@ def allowed_upload(file_storage) -> tuple[bool, str]:
 
 def save_temporary_upload(file_storage, safe_name: str) -> Path:
     """Save an uploaded file with a collision-resistant temporary name."""
-    UPLOAD_DIR.mkdir(exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     destination = UPLOAD_DIR / f"{uuid4()}_{safe_name}"
     file_storage.save(destination)
     return destination
+
+
+def remove_temporary_upload(upload_path: Path) -> None:
+    """Delete a temporary upload without masking the request result."""
+    try:
+        upload_path.unlink(missing_ok=True)
+    except OSError:
+        app.logger.warning("Could not remove temporary upload %s", upload_path, exc_info=True)
 
 
 @app.errorhandler(413)
@@ -108,6 +118,8 @@ def upload_file():
         flash(str(error), "error")
     except Exception as error:
         flash(f"Upload failed: {error}", "error")
+    finally:
+        remove_temporary_upload(upload_path)
 
     return redirect(url_for("home"))
 
@@ -155,6 +167,8 @@ def verify_file():
         flash(str(error), "error")
     except Exception as error:
         flash(f"Verification failed: {error}", "error")
+    finally:
+        remove_temporary_upload(upload_path)
 
     return redirect(url_for("home"))
 
